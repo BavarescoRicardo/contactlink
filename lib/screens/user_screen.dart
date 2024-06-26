@@ -9,14 +9,14 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class UserScreen extends StatefulWidget {
+  const UserScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _UserScreenState createState() => _UserScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _UserScreenState extends State<UserScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -95,9 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
         title: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthAuthenticated) {
-              return Text('Home - Bem-vindo ${state.username}');
+              return Text('Usuários - Adicionar ou Remover login ${state.username}');
             }
-            return const Text('Home');
+            return const Text('Usuários');
           },
         ),
         actions: [
@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               TextField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Telefone'),
+                decoration: const InputDecoration(labelText: 'Senha'),
               ),
               const SizedBox(height: 20),
               _isCameraInitialized
@@ -143,10 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                 onPressed: () => Navigator.pushNamed(context, '/about'),
                 child: const Text('Acessar Sobre'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/user'),
-                child: const Text('Acessar Usuários'),
               ),
             ],
           ),
