@@ -1,10 +1,9 @@
+import 'package:contactlink/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
-import '../models/contact.dart';
 import '../services/database_helper.dart';
-import '../services/api_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -18,7 +17,7 @@ class UserScreen extends StatefulWidget {
 
 class _UserScreenState extends State<UserScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _photoPath;
   late CameraController _cameraController;
@@ -26,7 +25,6 @@ class _UserScreenState extends State<UserScreen> {
   bool _isCameraInitialized = false;
 
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -36,7 +34,7 @@ class _UserScreenState extends State<UserScreen> {
 
   Future<void> _initializeCamera() async {
     _cameras = await availableCameras();
-    _cameraController = CameraController(_cameras[1], ResolutionPreset.medium);
+    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium);
     await _cameraController.initialize();
     setState(() {
       _isCameraInitialized = true;
@@ -53,26 +51,24 @@ class _UserScreenState extends State<UserScreen> {
     }
   }
 
-  void _saveContact() async {
+  void _saveUser() async {
     String name = _nameController.text;
-    String phone = _phoneController.text;
+    String pass = _passController.text;
     String? photo = _photoPath;
 
-    Contact newContact = Contact(name: name, phone: phone, photo: photo);
+    User newUser = User(name: name, pass: pass, photo: photo);
     // salva no banco de dados
-    await _dbHelper.saveContact(newContact);
-    // envia para o servidor
-    await _apiService.sendContact(newContact);
+    await _dbHelper.saveUser(newUser);
 
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Contato salvo com sucesso!')));
+        const SnackBar(content: Text('Usuário salvo com sucesso!')));
     _clearScreen();
   }
 
   void _clearScreen() {
     setState(() {
       _nameController.clear();
-      _phoneController.clear();
+      _passController.clear();
       _photoPath = null;
     });
     _scrollToBottom();
@@ -121,8 +117,9 @@ class _UserScreenState extends State<UserScreen> {
                 decoration: const InputDecoration(labelText: 'Nome'),
               ),
               TextField(
-                controller: _phoneController,
+                controller: _passController,
                 decoration: const InputDecoration(labelText: 'Senha'),
+                obscureText: true,
               ),
               const SizedBox(height: 20),
               _isCameraInitialized
@@ -137,12 +134,8 @@ class _UserScreenState extends State<UserScreen> {
                   onPressed: _takePicture, child: const Text('Capturar Foto')),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _photoPath != null ? _saveContact : null,
-                child: const Text('Salvar Contato'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/about'),
-                child: const Text('Acessar Sobre'),
+                onPressed: _photoPath != null ? _saveUser : null,
+                child: const Text('Salvar Usuário'),
               ),
             ],
           ),

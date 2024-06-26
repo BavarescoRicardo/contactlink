@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initializeCamera() async {
     _cameras = await availableCameras();
-    _cameraController = CameraController(_cameras[1], ResolutionPreset.medium);
+    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium);
     await _cameraController.initialize();
     setState(() {
       _isCameraInitialized = true;

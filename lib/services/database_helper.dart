@@ -1,3 +1,4 @@
+import 'package:contactlink/models/user.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/contact.dart';
@@ -34,7 +35,8 @@ class DatabaseHelper {
       CREATE TABLE user (
         id INTEGER PRIMARY KEY,
         username TEXT,
-        password TEXT
+        password TEXT,
+        photo TEXT
       )
     ''');
     // Insert default user
@@ -52,6 +54,11 @@ class DatabaseHelper {
     var dbClient = await db;
     return await dbClient.insert('contact', contact.toMap());
   }
+
+  Future<int> saveUser(User user) async {
+    var dbClient = await db;
+    return await dbClient.insert('user', user.toMap());
+  }  
 
   Future<Map<String, dynamic>?> getUser(
       String username, String password) async {
