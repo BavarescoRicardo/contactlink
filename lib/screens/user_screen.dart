@@ -16,11 +16,12 @@ class UserScreen extends StatefulWidget {
   _UserScreenState createState() => _UserScreenState();
 }
 
-class _UserScreenState extends State<UserScreen> {
+class _UserScreenState extends State<UserScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final AnimationController _animationController = AnimationController();
+  late AnimationController _animationController;
+  late Animation<double> _animation;
   String? _arquivoPath;
 
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -28,6 +29,15 @@ class _UserScreenState extends State<UserScreen> {
   @override
   void initState() {
     super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: -0.02, end: 0.02).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   void _pickFile() async {
@@ -112,8 +122,8 @@ class _UserScreenState extends State<UserScreen> {
               ),
               const SizedBox(height: 20),
               _arquivoPath != null
-                  ?  AnimatedBuilder(
-                      animation: _animationController,
+                  ? AnimatedBuilder(
+                      animation: _animation,
                       child: Container(
                         width: 200.0,
                         height: 200.0,
@@ -122,11 +132,11 @@ class _UserScreenState extends State<UserScreen> {
                           File(_arquivoPath!),
                           width: 350,
                           height: 350,
-                    )
+                        ),
                       ),
                       builder: (BuildContext context, Widget? child) {
                         return Transform.rotate(
-                          angle: _animationController.value * 2.0 * math.pi,
+                          angle: _animation.value * math.pi,
                           child: child,
                         );
                       },
@@ -150,8 +160,8 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   void dispose() {
+    _animationController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
-
 }
