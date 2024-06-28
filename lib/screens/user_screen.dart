@@ -1,8 +1,9 @@
 import 'package:contactlink/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:camera/camera.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'dart:math' as math;
 import '../services/database_helper.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -19,33 +20,21 @@ class _UserScreenState extends State<UserScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  String? _photoPath;
-  late CameraController _cameraController;
-  late List<CameraDescription> _cameras;
-  bool _isCameraInitialized = false;
+  final AnimationController _animationController = AnimationController();
+  String? _arquivoPath;
 
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
   }
 
-  Future<void> _initializeCamera() async {
-    _cameras = await availableCameras();
-    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium);
-    await _cameraController.initialize();
-    setState(() {
-      _isCameraInitialized = true;
-    });
-  }
-
-  void _takePicture() async {
-    if (_cameraController.value.isInitialized) {
-      XFile picture = await _cameraController.takePicture();
+  void _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
       setState(() {
-        _photoPath = picture.path;
+        _arquivoPath = result.files.single.path;
       });
       _scrollToBottom();
     }
@@ -54,7 +43,7 @@ class _UserScreenState extends State<UserScreen> {
   void _saveUser() async {
     String name = _nameController.text;
     String pass = _passController.text;
-    String? photo = _photoPath;
+    String? photo = _arquivoPath;
 
     User newUser = User(name: name, pass: pass, photo: photo);
     // salva no banco de dados
@@ -69,7 +58,7 @@ class _UserScreenState extends State<UserScreen> {
     setState(() {
       _nameController.clear();
       _passController.clear();
-      _photoPath = null;
+      _arquivoPath = null;
     });
     _scrollToBottom();
   }
@@ -122,19 +111,34 @@ class _UserScreenState extends State<UserScreen> {
                 obscureText: true,
               ),
               const SizedBox(height: 20),
-              _isCameraInitialized
-                  ? AspectRatio(
-                      aspectRatio: _cameraController.value.aspectRatio,
-                      child: CameraPreview(_cameraController),
+              _arquivoPath != null
+                  ?  AnimatedBuilder(
+                      animation: _animationController,
+                      child: Container(
+                        width: 200.0,
+                        height: 200.0,
+                        color: Colors.green,
+                        child: Image.file(
+                          File(_arquivoPath!),
+                          width: 350,
+                          height: 350,
+                    )
+                      ),
+                      builder: (BuildContext context, Widget? child) {
+                        return Transform.rotate(
+                          angle: _animationController.value * 2.0 * math.pi,
+                          child: child,
+                        );
+                      },
                     )
                   : Container(),
-              const SizedBox(height: 20),
-              _photoPath != null ? Image.file(File(_photoPath!)) : Container(),
               ElevatedButton(
-                  onPressed: _takePicture, child: const Text('Capturar Foto')),
+                onPressed: _pickFile,
+                child: const Text('Selecione o arquivo de imagem'),
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _photoPath != null ? _saveUser : null,
+                onPressed: _arquivoPath != null ? _saveUser : null,
                 child: const Text('Salvar Usuário'),
               ),
             ],
@@ -146,10 +150,8 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   void dispose() {
-    _cameraController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  // TODO: adicionar um botão e chamar uma tela sobre com informações de vocês
 }
